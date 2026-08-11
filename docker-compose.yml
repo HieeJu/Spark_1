@@ -1,0 +1,47 @@
+services:
+  spark-master:
+    image: apache/spark:3.5.1_v1.3
+    container_name: spark-master
+    user: root
+    privileged: true
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MODE=master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=admin_bhxh_123456@
+    ports:
+      - "7077:7077" # Spark Master port
+      - "8080:8080" # Web UI c?a Master
+      - "8888:8888" # Jupyter Lab
+    volumes:
+      - ./conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./apps:/opt/spark/apps
+      - ./jars:/opt/spark/jars-custom
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+
+  spark-worker-1:
+    image: apache/spark:3.5.1_v1.3
+    container_name: spark-worker-1
+    user: root
+    privileged: true
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://${NODE_IP}:7077 # Tr? v? IP c?a chính Node 3
+      - SPARK_WORKER_WEBUI_PORT=8081
+      - SPARK_WORKER_MEMORY=8G
+      - SPARK_WORKER_CORES=4
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=admin_bhxh_123456@
+    ports:
+      - "8081:8081" # Web UI c?a Worker 1
+    volumes:
+      - ./conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./jars:/opt/spark/jars-custom
+    depends_on:
+      - spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
