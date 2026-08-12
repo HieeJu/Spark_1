@@ -238,9 +238,9 @@ docker compose ps
 
 Các giao diện local:
 
-| Thành phần | URL |
-|---|---|
-| Airflow | `http://localhost:8082` |
+| Thành phần | URL                       |
+| ------------ | ------------------------- |
+| Airflow      | `http://localhost:8082` |
 | Spark Master | `http://localhost:8080` |
 | Spark Worker | `http://localhost:8081` |
 

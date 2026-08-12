@@ -1,19 +1,7 @@
-"""
-Bronze layer - Ingest CSV files into the data lake.
-
-Reads:
-    file:///opt/spark/data/raw_qttg_1m/RAW_QTTG_BHXH.csv
-    file:///opt/spark/data/raw_qttg_1m/RAW_QTTG_BHXH_DETAIL.csv
-
-Writes (overwrite):
-    file:///opt/spark/data/lake/bronze/RAW_QTTG_BHXH
-    file:///opt/spark/data/lake/bronze/RAW_QTTG_BHXH_DETAIL
-"""
-
 import argparse
 
-from pyspark.sql import SparkSession
-from pyspark.sql.types import (
+from pyspark.sql import SparkSession # type: ignore
+from pyspark.sql.types import ( # type: ignore
     DoubleType,
     IntegerType,
     LongType,
@@ -21,7 +9,7 @@ from pyspark.sql.types import (
     StructField,
     StructType,
     TimestampType,
-)
+) 
 
 MASTER_SCHEMA = StructType(
     [

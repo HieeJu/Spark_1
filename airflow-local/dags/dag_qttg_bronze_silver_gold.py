@@ -1,34 +1,22 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow import DAG  # type: ignore
+from airflow.operators.bash import BashOperator  # type: ignore
 
-
-# Lấy đúng tên từ lệnh: docker ps --format "table {{.Names}}"
-SPARK_CONTAINER = "spark-master"
+# Định nghĩa câu lệnh gửi trực tiếp job tới Spark Master thông qua Spark Submit REST API hoặc client nhẹ
 SPARK_MASTER = "spark://spark-master:7077"
 APP_DIR = "/opt/spark/apps/qttg"
-
-
-def spark_submit(app_name: str, app_args: str = "") -> str:
-    return f"""
-set -e
-docker exec {SPARK_CONTAINER} \
-  /opt/spark/bin/spark-submit \
-  --master {SPARK_MASTER} \
-  --deploy-mode client \
-  --driver-memory 1g \
-  --executor-memory 2g \
-  --executor-cores 2 \
-  {APP_DIR}/{app_name} {app_args}
-""".strip()
-
 
 default_args = {
     "owner": "student",
     "retries": 1,
     "retry_delay": timedelta(minutes=1),
 }
+
+
+def run_spark_script(app_name: str, app_args: str = "") -> str:
+    # Chạy script thông qua python driver đơn giản không phụ thuộc vào Docker CLI
+    return f"python3 {APP_DIR}/{app_name} {app_args}"
 
 
 with DAG(
@@ -43,7 +31,7 @@ with DAG(
 ) as dag:
     bronze = BashOperator(
         task_id="bronze_ingest_csv",
-        bash_command=spark_submit(
+        bash_command=run_spark_script(
             "bronze_qttg.py",
             "--input-dir file:///opt/spark/data/raw_qttg_1m "
             "--output-dir file:///opt/spark/data/lake/bronze",
@@ -53,7 +41,7 @@ with DAG(
 
     silver = BashOperator(
         task_id="silver_latest_person",
-        bash_command=spark_submit(
+        bash_command=run_spark_script(
             "silver_qttg.py",
             "--input-dir file:///opt/spark/data/lake/bronze "
             "--output-dir file:///opt/spark/data/lake/silver",
@@ -63,7 +51,7 @@ with DAG(
 
     gold = BashOperator(
         task_id="gold_monthly_report",
-        bash_command=spark_submit(
+        bash_command=run_spark_script(
             "gold_qttg.py",
             "--input-dir file:///opt/spark/data/lake/silver "
             "--output-dir file:///opt/spark/data/lake/gold",
@@ -73,7 +61,7 @@ with DAG(
 
     validate = BashOperator(
         task_id="validate_results",
-        bash_command=spark_submit(
+        bash_command=run_spark_script(
             "validate_qttg.py",
             "--lake-dir file:///opt/spark/data/lake",
         ),

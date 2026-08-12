@@ -1,18 +1,7 @@
-"""
-Gold layer - Tạo báo cáo tổng hợp tham gia BHXH theo tháng.
-
-Đọc Silver:
-    file:///opt/spark/data/lake/silver/RAW_QTTG_BHXH
-    file:///opt/spark/data/lake/silver/RAW_QTTG_BHXH_DETAIL
-
-Ghi (overwrite):
-    file:///opt/spark/data/lake/gold/BAO_CAO_BHXH_THANG
-"""
-
 import argparse
 
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession # type: ignore
+from pyspark.sql import functions as F # type: ignore
 
 
 def parse_args() -> argparse.Namespace:

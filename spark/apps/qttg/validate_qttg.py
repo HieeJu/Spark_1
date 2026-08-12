@@ -1,18 +1,7 @@
-"""
-Validate layer - Kiểm tra tính toàn vẹn dữ liệu sau khi chạy Bronze, Silver, Gold.
-
-Kiểm tra:
-    1. Detail không mồ côi (mọi MASTER_ID đều có master tương ứng tại Silver).
-    2. Mỗi người chỉ còn một master tại Silver.
-    3. TU_THANG <= DEN_THANG trong detail Silver.
-    4. Gold không trùng tháng.
-    5. Nếu có lỗi sẽ raise exception để task Airflow chuyển sang failed.
-"""
-
 import argparse
 
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession # type: ignore
+from pyspark.sql import functions as F # type: ignore
 
 ERRORS = []
 
