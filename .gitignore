@@ -1,34 +1,44 @@
-# Logs
-airflow-local/logs/
-
-# Large CSV data (1M rows - quá lớn để đẩy lên GitHub)
-output/raw_qttg_1m/*.csv
-RAW_QTTG_BHXH_DETAIL.csv
-RAW_QTTG_BHXH.csv
-
-# Spark checkpoint/derby data
-spark-warehouse/
-metastore_db/
-derby.log
-
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
 *.egg-info/
+
+# Virtual environments
 .venv/
 venv/
+env/
+ENV/
 
 # IDE
 .idea/
 .vscode/
 *.swp
-*.swo
+
+# Logs
+logs/
+*.log
+
+# Output data
+output/
+
+# Spark
+spark/data/
+spark/spark-warehouse/
+metastore_db/
+derby.log
+
+# Docker volumes
+volumes/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Airflow
-airflow-local/airflow.cfg
-airflow-local/airflow.db
-airflow-local/webserver_config.py
+# Environment
+.env
+*.local

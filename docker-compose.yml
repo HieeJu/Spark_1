@@ -1,9 +1,34 @@
 version: '3.8'
 
+networks:
+  spark-net:
+    driver: bridge
+
+x-airflow-common: &airflow-common
+  build:
+    context: ./airflow-local
+  image: qttg-airflow:2.8.1
+  user: "${AIRFLOW_UID:-50000}:0"
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__WEBSERVER__SECRET_KEY: local-qTTg-demo-only
+  volumes:
+    - ./airflow-local/dags:/opt/airflow/dags
+    - ./airflow-local/logs:/opt/airflow/logs
+    - /var/run/docker.sock:/var/run/docker.sock
+  networks:
+    - spark-net
+  depends_on:
+    postgres:
+      condition: service_healthy
+
 services:
   spark-master:
     image: apache/spark:3.5.1
-    container_name: spark-master
+    container_name: tst-spark-master
     user: root
     environment:
       - SPARK_NO_DAEMONIZE=true
@@ -14,55 +39,87 @@ services:
     ports:
       - "7077:7077"
       - "8080:8080"
-      - "8888:8888"
     volumes:
-      - ./spark/apps:/opt/spark/apps
-      - ./output:/opt/spark/output
-      - ./spark/data:/opt/spark/data
+      - ./spark/apps/qttg:/opt/spark/apps/qttg
+      - ./output/raw_qttg_1m:/opt/spark/data/raw_qttg_1m
+      - ./output/spark_lake:/opt/spark/data/lake
+    networks:
+      - spark-net
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
-  spark-worker-1:
+  spark-worker:
     image: apache/spark:3.5.1
-    container_name: spark-worker-1
+    container_name: tst-spark-worker
     user: root
     environment:
       - SPARK_NO_DAEMONIZE=true
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_WEBUI_PORT=8081
-      - SPARK_WORKER_MEMORY=4G
+      - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
       - SPARK_PUBLIC_DNS=localhost
     ports:
       - "8081:8081"
     volumes:
-      - ./spark/apps:/opt/spark/apps
-      - ./output:/opt/spark/output
-      - ./spark/data:/opt/spark/data
+      - ./spark/apps/qttg:/opt/spark/apps/qttg
+      - ./output/raw_qttg_1m:/opt/spark/data/raw_qttg_1m
+      - ./output/spark_lake:/opt/spark/data/lake
+    networks:
+      - spark-net
     depends_on:
       - spark-master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
 
-  airflow:
-    image: apache/airflow:2.8.1-python3.10
-    container_name: airflow-local
-    user: root
+  postgres:
+    image: postgres:15
+    container_name: tst-postgres
     environment:
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - spark-net
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: tst-airflow-init
+    command:
+      - bash
+      - -c
+      - |
+        airflow db migrate &&
+        (airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Local \
+          --lastname Admin \
+          --role Admin \
+          --email admin@example.local || echo "User admin da ton tai")
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: tst-airflow-webserver
+    command: webserver
     ports:
       - "8082:8080"
-    volumes:
-      - ./airflow-local/dags:/opt/airflow/dags
-      - ./airflow-local/logs:/opt/airflow/logs
-      - ./spark/apps:/opt/spark/apps
-      - ./output:/opt/spark/output
-      - ./spark/data:/opt/spark/data
-    depends_on:
-      - spark-master
-    command: >
-      bash -c "pip install apache-airflow-providers-apache-spark pyspark &&
-              airflow db init &&
-              airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
-              airflow standalone"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: tst-airflow-scheduler
+    command: scheduler
+
+volumes:
+  airflow-postgres:
