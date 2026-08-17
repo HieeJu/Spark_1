@@ -54,7 +54,7 @@ def main():
     detail_df = spark.read.csv(f"{args.input_dir}/RAW_QTTG_BHXH_DETAIL.csv", header=True, schema=detail_schema, mode="PERMISSIVE")
 
     master_count = master_df.count()
-    detail_count = detail_df.count()
+    detail_count = detail_df.count() 
 
     print(f"LAYER=BRONZE STATUS=SUCCESS MASTER_ROWS={master_count} DETAIL_ROWS={detail_count}")
 
