@@ -38,7 +38,7 @@ services:
       - SPARK_PUBLIC_DNS=localhost
     ports:
       - "7077:7077"
-      - "8080:8080"
+      - "8085:8080"
     volumes:
       - ./spark/apps/qttg:/opt/spark/apps/qttg
       - ./output/raw_qttg_1m:/opt/spark/data/raw_qttg_1m
@@ -73,6 +73,8 @@ services:
 
   postgres:
     image: postgres:15
+    ports:
+    - "5432:5432"
     container_name: tst-postgres
     environment:
       POSTGRES_USER: airflow
