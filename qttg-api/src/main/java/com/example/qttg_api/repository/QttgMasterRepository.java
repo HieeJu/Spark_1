@@ -11,9 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QttgMasterRepository extends JpaRepository<QttgMaster, Long> {
 
-    // Query tìm kiếm phân trang theo so_so_bhxh HOẶC ten_don_vi
-   @Query(value = "SELECT DISTINCT m FROM QttgMaster m " +
-                   "LEFT JOIN m.details d " +
+    @Query(value = "SELECT DISTINCT m FROM QttgMaster m " +
+                   "LEFT JOIN FETCH m.details d " +
                    "WHERE :keyword IS NULL OR :keyword = '' " +
                    "OR LOWER(m.soSoBhxh) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
                    "OR LOWER(d.tenDonVi) LIKE LOWER(CONCAT('%', :keyword, '%'))",
@@ -22,5 +21,5 @@ public interface QttgMasterRepository extends JpaRepository<QttgMaster, Long> {
                         "WHERE :keyword IS NULL OR :keyword = '' " +
                         "OR LOWER(m.soSoBhxh) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
                         "OR LOWER(d.tenDonVi) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page searchMasterWithDetails(@Param("keyword") String keyword, Pageable pageable);
+    Page<QttgMaster> searchMasterWithDetails(@Param("keyword") String keyword, Pageable pageable);
 }
