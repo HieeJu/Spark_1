@@ -104,8 +104,8 @@ function App() {
       render: text => text ? <Tag color="blue">{text}</Tag> : <Tag color="default">N/A</Tag>
     },
     { title: 'ID NLĐ', dataIndex: 'nldId', key: 'nldId' },
-    { title: 'Tháng BĐ', dataIndex: 'thangBd', key: 'thangBd', render: text => text || '-' },
-    { title: 'Tháng KT', dataIndex: 'thangKt', key: 'thangKt', render: text => text || '-' },
+    { title: 'Tháng BĐ', dataIndex: 'thangBd', key: 'thangBd', render: text => formatDate(text) || '-' },
+    { title: 'Tháng KT', dataIndex: 'thangKt', key: 'thangKt', render: text => formatDate(text) || '-' },
     {
       title: 'Hành động',
       key: 'action',
@@ -217,7 +217,7 @@ function App() {
                   <Tag color="blue">{selectedRecord.soSoBhxh}</Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="ID Người lao động">{selectedRecord.nldId}</Descriptions.Item>
-                <Descriptions.Item label="Thời gian">{selectedRecord.thangBd} - {selectedRecord.thangKt}</Descriptions.Item>
+                <Descriptions.Item label="Thời gian">{formatDate(selectedRecord.thangBd)} - {formatDate(selectedRecord.thangKt)}</Descriptions.Item>
               </Descriptions>
 
               <Title level={5}>Lịch sử quá trình công tác tại các đơn vị:</Title>
@@ -244,6 +244,16 @@ function App() {
       </Space>
     </div>
   );
+}
+function formatDate(val) {
+  if (!val) return '';
+  const str = String(val).trim();
+  if (str.length === 6) {
+    const year = str.substring(0, 4);
+    const month = str.substring(4, 6);
+    return `${month}/${year}`; 
+  }
+  return val;
 }
 
 export default App;

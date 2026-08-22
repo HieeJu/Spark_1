@@ -19,7 +19,7 @@ public interface QttgMasterRepository extends JpaRepository<QttgMaster, Long> {
            countQuery = "SELECT COUNT(DISTINCT m) FROM QttgMaster m " +
                         "LEFT JOIN m.details d " +
                         "WHERE :keyword IS NULL OR :keyword = '' " +
-                        "OR LOWER(m.soSoBhxh) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-                        "OR LOWER(d.tenDonVi) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+                        "OR LOWER(m.soSoBhxh) LIKE LOWER(CONCAT('%', :keyword, '%')) " + // Tìm hiểu lại
+                        "OR LOWER(d.tenDonVi) LIKE LOWER(CONCAT('%', :keyword, '%'))") 
     Page<QttgMaster> searchMasterWithDetails(@Param("keyword") String keyword, Pageable pageable);
 }
